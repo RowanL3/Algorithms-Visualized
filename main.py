@@ -3,6 +3,8 @@ import random
 from operator import attrgetter
 from algorithms import quickSort, bubbleSort, mergeSort
 
+frames = []
+
 def random_swap(data):
     rand1 = random.randint(0, len(data)-1)
     rand2 = random.randint(0, len(data)-1)
@@ -14,9 +16,12 @@ def random_color():
 
 
 class DisplayElement():
-    def __init__(self, value):
+    def __init__(self, value, color = None):
         self.value = value
-        self.color = random_color()
+        if color == None:
+            self.color = random_color()
+        else:
+            self.color = color
     
     def __lt__(self, other):
         return self.value < other.value
@@ -33,40 +38,39 @@ class DisplayArray():
         return self.data[k]
 
     def __setitem__(self, k, element):
-        self.data[k] = DisplayElement(0)
-        self.data[k].value = element.value
-        self.data[k].color = element.color
+        self.data[k] = DisplayElement(element.value, element.color)
+        # self.data[k].value = DisplayElement(element.value, element.color)
+        frames.append([DisplayElement(el.value, el.color) for el in self.data])
 
-    def draw(self, size, screen):
-        for x in self.data:
-            print(x.color, x.value)
 
-        max_width, max_height = size
-        block_width = max_width / len(self.data)
-        block_scale = max_height / max(self.data).value
+def draw(data, size, screen):
+    max_width, max_height = size
+    block_width = max_width / len(data)
+    block_scale = max_height / max(data).value
 
-        for index, element in enumerate(self.data):
-            block_height = block_scale * element.value
-            horizontal_offset = index * block_width
-            top_left = [horizontal_offset, max_height - block_height]
-            block_size = [block_width, block_height]
+    for index, element in enumerate(data):
+        block_height = block_scale * element.value
+        horizontal_offset = index * block_width
+        top_left = [horizontal_offset, max_height - block_height]
+        block_size = [block_width, block_height]
 
-            pygame.draw.rect(screen, element.color, top_left + block_size)
+        pygame.draw.rect(screen, element.color, top_left + block_size)
 
 # initialize game engine
 pygame.init()
 # set screen width/height and caption
 size = [640, 480]
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption('My Game')
+pygame.display.set_caption("Visual Sorting")
 # initialize clock. used later in the loop.
 clock = pygame.time.Clock()
 red = (255, 0, 0, 255)
 
 x,y,z = 100,100,100
 
-display = DisplayArray(3,2,3.5,1,5)
-mergeSort(display)
+# display = DisplayArray([random.random() for _ in range(20)])
+display = DisplayArray(*[random.random() for _ in range(300)])
+quickSort(display, 0, len(display) - 1)
 i = 0
 # Loop until the user clicks close button
 done = False
@@ -78,13 +82,17 @@ while done == False:
      
     # clear the screen before drawing
     screen.fill((255, 255, 255)) 
-    display.draw(size, screen)
+
+    draw(frames[i], size, screen)
+
+    if i < len(frames) - 1: 
+        i += 1
     # write draw code here
     # pygame.draw.circle(screen,(0,0,255),[x,y],20//z)
     
     pygame.display.update()
     # run at 20 fps
-    clock.tick(1)
+    clock.tick(20)
  
 # close the window and quit
 pygame.quit()
