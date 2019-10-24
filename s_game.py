@@ -15,17 +15,21 @@ class DisplayArray():
     def __getitem__(self, k):
         return self.data[k]
 
+    def __setitem__(self, k, value):
+        self.data[k] = value
+
     def draw(self, size, screen):
         max_width, max_height = size
         block_width = max_width / len(self.data)
         block_scale = max_height / max(self.data)
 
-        for index,value in enumerate(self.data):
+        for index, value in enumerate(self.data):
+            block_height = block_scale * value
             horizontal_offset = index * block_width
-            top_left = [horizontal_offset, max_height - block_scale * value]
-            bottom_right = [horizontal_offset + block_width, max_height]
-            pygame.draw.rect(screen, self.colors[index], top_left + bottom_right)
-            
+            top_left = [horizontal_offset, max_height - block_height]
+            block_size = [block_width, block_height]
+
+            pygame.draw.rect(screen, self.colors[index], top_left + block_size)
 
  
 # initialize game engine
@@ -40,7 +44,8 @@ red = (255, 0, 0, 255)
 
 x,y,z = 100,100,100
 
-display = DisplayArray(1,2,3,4,5)
+display = DisplayArray(3,2,3.5,1,5)
+i = 0
 # Loop until the user clicks close button
 done = False
 while done == False:
@@ -48,7 +53,8 @@ while done == False:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-    
+     
+    display[random.randint(0,len(display)-1)] = random.random()
     
     # clear the screen before drawing
     screen.fill((255, 255, 255)) 
@@ -58,7 +64,7 @@ while done == False:
     
     pygame.display.update()
     # run at 20 fps
-    clock.tick(20)
+    clock.tick(1)
  
 # close the window and quit
 pygame.quit()
