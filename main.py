@@ -1,6 +1,7 @@
 import pygame
 import random
 from operator import attrgetter
+from algorithms import quickSort, bubbleSort, mergeSort
 
 def random_swap(data):
     rand1 = random.randint(0, len(data)-1)
@@ -11,10 +12,15 @@ def random_swap(data):
 def random_color():
     return [random.randint(30, 255) for _ in range(3)] + [255]
 
+
 class DisplayElement():
     def __init__(self, value):
         self.value = value
         self.color = random_color()
+    
+    def __lt__(self, other):
+        return self.value < other.value
+
 
 class DisplayArray():
     def __init__(self, *args):
@@ -37,8 +43,7 @@ class DisplayArray():
 
         max_width, max_height = size
         block_width = max_width / len(self.data)
-        # block_scale = max_height / max(self.data, key = attrgetter("value"))
-        block_scale = max_height / max(map(attrgetter("value"), self.data))
+        block_scale = max_height / max(self.data).value
 
         for index, element in enumerate(self.data):
             block_height = block_scale * element.value
@@ -61,6 +66,7 @@ red = (255, 0, 0, 255)
 x,y,z = 100,100,100
 
 display = DisplayArray(3,2,3.5,1,5)
+mergeSort(display)
 i = 0
 # Loop until the user clicks close button
 done = False
@@ -70,7 +76,6 @@ while done == False:
         if event.type == pygame.QUIT:
             done = True
      
-    random_swap(display.data)
     # clear the screen before drawing
     screen.fill((255, 255, 255)) 
     display.draw(size, screen)
