@@ -1,9 +1,14 @@
-import pygame
 import random
+from copy import copy
 from operator import attrgetter
+
+import pygame
+
 from algorithms import quickSort, bubbleSort, mergeSort
 
-frames = []
+# Bugs:
+# Jittery display when moving the tallest bar
+# [Fixed] 0th frame is actually one frame into the animation
 
 def random_swap(data):
     rand1 = random.randint(0, len(data)-1)
@@ -28,20 +33,31 @@ class DisplayElement():
 
 
 class DisplayArray():
-    def __init__(self, *args):
-        self.data = [DisplayElement(x) for x in args]
+    def __init__(self, size, data):
+        self.base = [DisplayElement(x) for x in data]
+        self.current = [copy(el) for el in self.base]
+        self.deltas = []
+        self.frame = 0
 
     def __len__(self):
-        return len(self.data)
+        return len(self.current)
 
     def __getitem__(self, k):
-        return self.data[k]
+        return self.current[k]
 
     def __setitem__(self, k, element):
-        self.data[k] = DisplayElement(element.value, element.color)
-        # self.data[k].value = DisplayElement(element.value, element.color)
-        frames.append([DisplayElement(el.value, el.color) for el in self.data])
+        self.current[k] = DisplayElement(element.value, element.color)
+        self.deltas.append((k, copy(element)))
+        self.frame += 1
 
+    def rewind(self):
+        self.frame = 0
+        self.current = [copy(el) for el in self.base]
+
+    def advance(self):
+        index, change = self.deltas[self.frame]
+        self.current[index] = change
+        self.frame += 1
 
 def draw(data, size, screen):
     max_width, max_height = size
@@ -56,45 +72,32 @@ def draw(data, size, screen):
 
         pygame.draw.rect(screen, element.color, top_left + block_size)
 
-# initialize game engine
 pygame.init()
-# set screen width/height and caption
+
 size = [640, 480]
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Visual Sorting")
-# initialize clock. used later in the loop.
 clock = pygame.time.Clock()
-red = (255, 0, 0, 255)
 
-x,y,z = 100,100,100
-
-# display = DisplayArray([random.random() for _ in range(20)])
-display = DisplayArray(*[random.random() for _ in range(300)])
+display = DisplayArray(size, [random.random() for _ in range(10000)])
 quickSort(display, 0, len(display) - 1)
-i = 0
-# Loop until the user clicks close button
+display.rewind()
+
 done = False
 while done == False:
-    # write event handlers here
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+            display.rewind()
      
-    # clear the screen before drawing
     screen.fill((255, 255, 255)) 
 
-    draw(frames[i], size, screen)
+    draw(display.current, size, screen)
+    display.advance()
 
-    if i < len(frames) - 1: 
-        i += 1
-    # write draw code here
-    # pygame.draw.circle(screen,(0,0,255),[x,y],20//z)
-    
     pygame.display.update()
-    # run at 20 fps
+
     clock.tick(20)
  
-# close the window and quit
 pygame.quit()
-
-
